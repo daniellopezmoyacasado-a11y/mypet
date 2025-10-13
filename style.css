@@ -43,3 +43,15 @@ button:hover {
   font-weight: bold;
   margin-top: 8px;
 }
+
+.hidden { display: none; }
+
+#choices button {
+  background: #a2d2ff;
+  margin: 10px;
+  font-size: 18px;
+}
+
+.screen {
+  text-align: center;
+}

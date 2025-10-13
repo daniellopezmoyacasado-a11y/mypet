@@ -7,9 +7,18 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="pet-container">
+  <div id="choose-screen" class="screen">
+    <h1>Choose Your Pet</h1>
+    <div id="choices">
+      <button onclick="choosePet('cat')">🐱 Cat</button>
+      <button onclick="choosePet('dog')">🐶 Dog</button>
+      <button onclick="choosePet('dragon')">🐉 Dragon</button>
+    </div>
+  </div>
+
+  <div id="pet-container" class="screen hidden">
     <h1>🐾 My Virtual Pet 🐾</h1>
-    <img id="pet" src="happy1.png" alt="pet">
+    <img id="pet" src="" alt="pet">
     <div id="stats">
       <p>🕓 Time: <span id="timeDisplay"></span></p>
       <p>🍎 Hunger: <span id="hunger">0</span></p>
@@ -21,6 +30,7 @@
       <button onclick="play()">🎮 Play</button>
     </div>
   </div>
+
   <script src="script.js"></script>
 </body>
-</html>
+
