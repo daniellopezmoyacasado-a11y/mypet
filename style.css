@@ -1,0 +1,32 @@
+body {
+  background: #ffe8d6;
+  font-family: "Comic Sans MS", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+#pet-container {
+  text-align: center;
+  background: #fff8f0;
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  padding: 20px;
+  width: 250px;
+}
+
+button {
+  background: #ffafcc;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 15px;
+  margin: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #ffb6b9;
+}
