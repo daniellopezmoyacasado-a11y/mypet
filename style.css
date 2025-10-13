@@ -1,5 +1,5 @@
 body {
-  background: #ffe8d6;
+  background: linear-gradient(#ffe8d6, #fcd5ce);
   font-family: "Comic Sans MS", sans-serif;
   display: flex;
   justify-content: center;
@@ -14,7 +14,14 @@ body {
   border-radius: 20px;
   box-shadow: 0 0 20px rgba(0,0,0,0.2);
   padding: 20px;
-  width: 250px;
+  width: 260px;
+}
+
+#pet {
+  width: 120px;
+  height: 120px;
+  margin: 10px;
+  image-rendering: pixelated;
 }
 
 button {
@@ -25,8 +32,14 @@ button {
   margin: 5px;
   font-size: 16px;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
 button:hover {
   background: #ffb6b9;
+}
+
+#status {
+  font-weight: bold;
+  margin-top: 8px;
 }
