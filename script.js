@@ -21,12 +21,15 @@ const statusDisplay = document.getElementById('status');
 const timeDisplay = document.getElementById('timeDisplay');
 
 // Start logic based on whether pet is already chosen
+window.addEventListener('DOMContentLoaded', () => {
 if (!petType) {
   chooseScreen.classList.remove('hidden');
   petContainer.classList.add('hidden');
 } else {
   startGame();
 }
+});
+
 
 // ----------------------------
 //  PET SELECTION
