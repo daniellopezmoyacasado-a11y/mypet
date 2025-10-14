@@ -1,6 +1,6 @@
 /* 
-  Virtual Pet v3 — Multi-pet, animation, sleep cycle, and local save
-  Works with folder structure:
+  Virtual Pet v4 — Random pet, animation, sleep cycle, and local save
+  Folder structure:
   pets/{cat|dog|dragon}/happy1.png, happy2.png, sad1.png, sad2.png, sleepy1.png, sleepy2.png
 */
 
@@ -11,8 +11,15 @@ let isAsleep = false;
 let animFrame = 0;
 let lastUpdate = Date.now();
 
-// DOM elements
-const chooseScreen = document.getElementById('choose-screen');
+// If no pet saved, randomly pick one and save
+if (!petType) {
+  const pets = ['cat', 'dog', 'dragon'];
+  petType = pets[Math.floor(Math.random() * pets.length)];
+  localStorage.setItem('petType', petType);
+  console.log(`🎲 Random pet chosen: ${petType}`);
+}
+
+// DOM references
 const petContainer = document.getElementById('pet-container');
 const petImg = document.getElementById('pet');
 const hungerDisplay = document.getElementById('hunger');
@@ -20,35 +27,11 @@ const happinessDisplay = document.getElementById('happiness');
 const statusDisplay = document.getElementById('status');
 const timeDisplay = document.getElementById('timeDisplay');
 
-// Start logic based on whether pet is already chosen
-window.addEventListener('DOMContentLoaded', () => {
-if (!petType) {
-  chooseScreen.classList.remove('hidden');
-  petContainer.classList.add('hidden');
-} else {
-  startGame();
-}
-});
-
-
 // ----------------------------
-//  PET SELECTION
-// ----------------------------
-function choosePet(type) {
-  petType = type;
-  localStorage.setItem('petType', type);
-  chooseScreen.classList.add('hidden');
-  petContainer.classList.remove('hidden');
-  startGame();
-}
-
-// ----------------------------
-//  MAIN GAME START
+//  GAME INITIALIZATION
 // ----------------------------
 function startGame() {
-  // localStorage.clear(); // uncomment to reset all data
-
-  // Load saved data
+  // Load stats
   if (localStorage.getItem('petData')) {
     const data = JSON.parse(localStorage.getItem('petData'));
     hunger = data.hunger || 0;
@@ -56,16 +39,16 @@ function startGame() {
     lastUpdate = data.lastUpdate || Date.now();
   }
 
-  // Apply decay based on time elapsed since last visit
+  // Apply decay since last visit
   const elapsedMinutes = (Date.now() - lastUpdate) / 60000;
-  hunger = Math.min(100, hunger + Math.floor(elapsedMinutes / 3)); // +1 hunger every 3 mins
-  happiness = Math.max(0, happiness - Math.floor(elapsedMinutes / 5)); // -1 happiness every 5 mins
+  hunger = Math.min(100, hunger + Math.floor(elapsedMinutes / 3));
+  happiness = Math.max(0, happiness - Math.floor(elapsedMinutes / 5));
   save();
 
   updateDisplay();
   updateTime();
 
-  // Run update loop
+  // Main loop
   setInterval(() => {
     updateTime();
     if (!isAsleep) {
@@ -78,15 +61,13 @@ function startGame() {
 }
 
 // ----------------------------
-//  GAME LOGIC
+//  MAIN LOGIC
 // ----------------------------
 function updateTime() {
   const now = new Date();
   const hours = now.getHours();
   const minutes = now.getMinutes().toString().padStart(2, '0');
   timeDisplay.textContent = `${hours}:${minutes}`;
-
-  // Sleep from 22:00 to 7:00
   isAsleep = (hours >= 22 || hours < 7);
 }
 
@@ -137,12 +118,14 @@ function play() {
 //  SAVE FUNCTION
 // ----------------------------
 function save() {
-  localStorage.setItem(
-    'petData',
-    JSON.stringify({
-      hunger,
-      happiness,
-      lastUpdate: Date.now(),
-    })
-  );
+  localStorage.setItem('petData', JSON.stringify({
+    hunger,
+    happiness,
+    lastUpdate: Date.now(),
+  }));
 }
+
+// ----------------------------
+//  START GAME
+// ----------------------------
+startGame();
