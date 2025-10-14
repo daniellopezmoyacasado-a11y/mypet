@@ -235,7 +235,7 @@ function gameLoop() {
 
   // Draw player and obstacle
   ctx.fillStyle = "black";// dark gray or any color you like
-  ctx.fillRect(player.x, player.y - 5, player.size + 10, player.size + 10);
+  //ctx.fillRect(player.x, player.y, 4, 4);
   //ctx.fillRect(player.x, player.y, player.size, player.size);
   ctx.drawImage(petSprite, player.x, player.y - 5, player.size + 10, player.size + 10);
   ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
