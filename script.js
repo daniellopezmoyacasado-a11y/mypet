@@ -10,6 +10,7 @@ let happiness = 100;
 let isAsleep = false;
 let animFrame = 0;
 let lastUpdate = Date.now();
+let gameStarted = false;
 
 // DOM elements
 const chooseScreen = document.getElementById('choose-screen');
@@ -39,15 +40,17 @@ function choosePet(type) {
   localStorage.setItem('petType', type);
   chooseScreen.classList.add('hidden');
   petContainer.classList.remove('hidden');
-  startGame();
+  if (!gameStarted) startGame();
 }
 
 // ----------------------------
 //  MAIN GAME START
 // ----------------------------
 function startGame() {
+  if (gameStarted) return;
+  gameStarted = true;
   // localStorage.clear(); // uncomment to reset all data
-
+  console.log("Game Start")
   // Load saved data
   if (localStorage.getItem('petData')) {
     const data = JSON.parse(localStorage.getItem('petData'));
@@ -67,6 +70,7 @@ function startGame() {
 
   // Run update loop
   setInterval(() => {
+    console.log("internal loop")
     updateTime();
     if (!isAsleep) {
       hunger = Math.min(100, hunger + 0.05);
@@ -88,6 +92,7 @@ function updateTime() {
 
   // Sleep from 22:00 to 7:00
   isAsleep = (hours >= 22 || hours < 7);
+  
 }
 
 function updateDisplay() {
@@ -127,8 +132,9 @@ function feed() {
 
 function play() {
   if (isAsleep) return;
-  happiness = Math.min(100, happiness + 10);
+  happiness = Math.min(100, happiness + 1);
   hunger = Math.min(100, hunger + 5);
+  startMiniGame();
   save();
   updateDisplay();
 }
@@ -145,4 +151,129 @@ function save() {
       lastUpdate: Date.now(),
     })
   );
+}
+
+// ----------------------------
+// MINI GAME — Jump to avoid obstacles
+// ----------------------------
+
+const gameScreen = document.getElementById('game-screen');
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let gameActive = false;
+let player, obstacle, gravity, jumpPower, score, speed;
+let petSprite = new Image();
+
+// Start mini game
+function startMiniGame() {
+  if (isAsleep) return;
+
+   petSprite.src = petImg.src;
+
+  petContainer.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+  initGame();
+
+  document.addEventListener('keydown', handleJump);
+  canvas.addEventListener('touchstart', handleJump);
+}
+
+// Initialize game state
+function initGame() {
+  gameActive = true;
+  player = { x: 40, y: 120, size: 20, vy: 0, onGround: true };
+  obstacle = { x: 300, y: 130, width: 10, height: 20 };
+  gravity = 0.6;
+  jumpPower = -10;
+  speed = 3;
+  score = 0;
+  requestAnimationFrame(gameLoop);
+}
+
+// Game loop
+function gameLoop() {
+  if (!gameActive) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Move obstacle
+  obstacle.x -= speed;
+  if (obstacle.x < -10) {
+    obstacle.x = 300 + Math.random() * 100;
+    score++;
+     if (score % 3 === 0) {
+      speed += 0.5; // obstacle moves faster
+      if (speed > 10) speed = 10; // max cap
+    }
+  }
+
+  // Apply gravity
+  player.vy += gravity;
+  player.y += player.vy;
+
+  // Floor collision
+  if (player.y >= 120) {
+    player.y = 120;
+    player.vy = 0;
+    player.onGround = true;
+  }
+
+  // Collision detection
+  if (
+    obstacle.x < player.x + player.size &&
+    obstacle.x + obstacle.width > player.x &&
+    player.y + player.size > obstacle.y
+  ) {
+    endMiniGame(false);
+    return;
+  }
+
+  // Draw player and obstacle
+  ctx.fillStyle = "black";
+  //ctx.fillRect(player.x, player.y, player.size, player.size);
+  ctx.drawImage(petSprite, player.x, player.y - 5, player.size + 10, player.size + 10);
+  ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+
+  // Draw score
+  ctx.font = "12px monospace";
+  ctx.fillText(`Score: ${score}`, 10, 20);
+
+  requestAnimationFrame(gameLoop);
+}
+
+// Jump
+function handleJump(e) {
+  if (!gameActive) return;
+  if (player.onGround) {
+    player.vy = jumpPower;
+    player.onGround = false;
+  }
+}
+
+// Stop game manually
+function stopMiniGame() {
+  if (!gameActive) return;
+  endMiniGame(true, true); // force stop
+}
+
+// End game
+function endMiniGame(won = true, manualStop = false) {
+  gameActive = false;
+  document.removeEventListener('keydown', handleJump);
+  canvas.removeEventListener('touchstart', handleJump);
+
+  let bonus = 0;
+  if (!manualStop) {
+    bonus = Math.min(20, score * 2);
+  }
+
+  happiness = Math.min(100, happiness + bonus);
+  hunger = Math.min(100, hunger + (bonus));
+  save();
+
+  setTimeout(() => {
+    gameScreen.classList.add('hidden');
+    petContainer.classList.remove('hidden');
+    updateDisplay();
+  }, 500);
 }
