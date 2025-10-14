@@ -1,0 +1,96 @@
+body {
+  background: linear-gradient(#ffe8d6, #fcd5ce);
+  font-family: "Comic Sans MS", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+#pet-container {
+  text-align: center;
+  background: #fff8f0;
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  padding: 20px;
+  width: 260px;
+}
+
+#pet {
+  width: 120px;
+  height: 120px;
+  margin: 10px;
+  image-rendering: pixelated;
+}
+
+button {
+  background: #ffafcc;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 15px;
+  margin: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: #ffb6b9;
+}
+
+#status {
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+
+#choices button {
+  background: #a2d2ff;
+  margin: 10px;
+  font-size: 18px;
+}
+
+.screen {
+  text-align: center;
+}
+
+body {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+  letter-spacing: -0.5px;
+}
+
+
+
+#gameCanvas {
+  background: #fff;
+  border: 2px solid #000;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+#animation-box {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+#animation-box img {
+  width: 150px;
+  height: auto;
+  image-rendering: pixelated;
+  border-radius: 12px;
+  background: #fff;
+  padding: 8px;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+}
+
+
+.hidden {
+  display: none !important;
+}

@@ -1,42 +1,79 @@
-body {
-  background: linear-gradient(#ffe8d6, #fcd5ce);
-  font-family: "Comic Sans MS", sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* === GAME BOY RETRO THEME === */
+:root {
+  --bg-dark: #223344;     /* dark blue-gray text */
+  --bg-light: #cfe8ff;    /* pale blue background */
+  --fg-dark: #335577;     /* medium outline */
+  --fg-light: #a8d0ff;    /* highlight */
 }
 
-#pet-container {
+
+body {
+  background: var(--bg-light);
+  color: var(--bg-dark);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  letter-spacing: 1px;
   text-align: center;
-  background: #fff8f0;
-  border-radius: 20px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.2);
-  padding: 20px;
+  margin: 0;
+  padding: 10px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* Add subtle LCD scanlines */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.05) 0px,
+    rgba(0, 0, 0, 0.05) 1px,
+    transparent 2px,
+    transparent 3px
+  );
+  pointer-events: none;
+}
+
+/* The pet “screen” */
+#pet-container, .screen {
+  background: var(--bg-light);
+  border: 3px solid var(--fg-dark);
+  border-radius: 4px;
+  box-shadow: inset 0 0 10px var(--fg-dark);
+  padding: 12px;
   width: 260px;
+  text-align: center;
 }
 
 #pet {
-  width: 120px;
-  height: 120px;
-  margin: 10px;
+  width: 80px;
+  height: 80px;
+  margin: 8px;
   image-rendering: pixelated;
 }
 
+/* Buttons */
 button {
-  background: #ffafcc;
-  border: none;
-  border-radius: 12px;
-  padding: 10px 15px;
-  margin: 5px;
-  font-size: 16px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  background: var(--bg-dark);
+  color: var(--bg-light);
+  border: 2px solid var(--fg-dark);
+  border-radius: 2px;
+  padding: 5px 8px;
+  margin: 4px;
   cursor: pointer;
-  transition: background 0.2s;
 }
 
 button:hover {
-  background: #ffb6b9;
+  background: var(--fg-dark);
 }
 
 #status {
@@ -44,29 +81,37 @@ button:hover {
   margin-top: 8px;
 }
 
-.hidden { display: none; }
-
-#choices button {
-  background: #a2d2ff;
-  margin: 10px;
-  font-size: 18px;
-}
-
-.screen {
-  text-align: center;
-}
-
-body {
-  font-family: 'Press Start 2P', cursive;
-  font-size: 10px;
-  letter-spacing: -0.5px;
-}
-
-.hidden { display: none; }
-
+/* Game canvas */
 #gameCanvas {
-  background: #fff;
-  border: 2px solid #000;
-  border-radius: 8px;
+  background: var(--bg-light);
+  border: 2px solid var(--fg-dark);
+  border-radius: 2px;
+  image-rendering: pixelated;
   margin-top: 10px;
+}
+
+/* Animation box */
+#animation-box {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+#animation-box img {
+  width: 120px;
+  height: auto;
+  image-rendering: pixelated;
+  background: var(--bg-light);
+  border: 2px solid var(--fg-dark);
+  border-radius: 2px;
+  padding: 4px;
+  box-shadow: 0 0 10px var(--fg-light);
+}
+
+.hidden {
+  display: none !important;
 }

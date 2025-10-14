@@ -104,12 +104,12 @@ function updateDisplay() {
   else if (happiness < 40 || hunger > 70) mood = "sad";
 
   statusDisplay.textContent = isAsleep
-    ? "💤 Sleeping..."
+    ? "Sleeping..."
     : hunger > 70
-    ? "🍴 Hungry!"
+    ? "Hungry!"
     : happiness < 40
-    ? "😢 Needs attention"
-    : "😊 Happy!";
+    ? "Needs attention"
+    : "Happy!";
 
   animFrame = (animFrame + 1) % 2;
   petImg.src = `pets/${petType}/${mood}${animFrame + 1}.png`;
@@ -124,10 +124,15 @@ function updateDisplay() {
 // ----------------------------
 function feed() {
   if (isAsleep) return;
-  hunger = Math.max(0, hunger - 15);
-  happiness = Math.min(100, happiness + 5);
-  save();
-  updateDisplay();
+  if (hunger <= 0) return; 
+  else {// no overfeeding, TODO play no_eat_anim
+    playPetAnimation(petType, "eat_anim", 5, 400, () => {
+      hunger = Math.max(0, hunger - 15);
+      happiness = Math.min(100, happiness + 5);
+      save();
+      updateDisplay();
+    });
+  }
 }
 
 function play() {
@@ -229,7 +234,8 @@ function gameLoop() {
   }
 
   // Draw player and obstacle
-  ctx.fillStyle = "black";
+  ctx.fillStyle = "black";// dark gray or any color you like
+  ctx.fillRect(player.x, player.y - 5, player.size + 10, player.size + 10);
   //ctx.fillRect(player.x, player.y, player.size, player.size);
   ctx.drawImage(petSprite, player.x, player.y - 5, player.size + 10, player.size + 10);
   ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
@@ -277,3 +283,40 @@ function endMiniGame(won = true, manualStop = false) {
     updateDisplay();
   }, 500);
 }
+
+// ----------------------------
+// GENERIC ANIMATION PLAYER
+// ----------------------------
+
+const animBox = document.getElementById('animation-box');
+const animatFrame = document.getElementById('anim-frame');
+
+/**
+ * Play a short frame-based animation overlay
+ * @param {string} petType - e.g. "cat", "dog", "dragon"
+ * @param {string} animatName - e.g. "eat_anim"
+ * @param {number} frameCount - number of frames (e.g. 5)
+ * @param {number} frameDelay - ms between frames (e.g. 200)
+ * @param {function} callback - what to run after the animation
+ */
+function playPetAnimation(petType, animatName, frameCount, frameDelay, callback) {
+  animBox.classList.remove('hidden');
+  let frame = 1;
+
+  function nextFrame() {
+    animatFrame.src = `pets/${petType}/${animatName}${frame}.png`;
+    frame++;
+    if (frame <= frameCount) {
+      setTimeout(nextFrame, frameDelay);
+    } else {
+      // End animation
+      setTimeout(() => {
+        animBox.classList.add('hidden');
+        if (callback) callback();
+      }, frameDelay);
+    }
+  }
+
+  nextFrame();
+}
+

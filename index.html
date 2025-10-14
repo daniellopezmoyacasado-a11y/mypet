@@ -11,33 +11,41 @@
   <div id="choose-screen" class="screen">
     <h1>Choose Your Pet</h1>
     <div id="choices">
-      <button onclick="choosePet('cat')">🐱 Cat</button>
-      <button onclick="choosePet('dog')">🐶 Dog</button>
-      <button onclick="choosePet('dragon')">🐉 Dragon</button>
+      <button onclick="choosePet('cat')"> Cat</button>
+      <button onclick="choosePet('dog')"> Dog</button>
+      <button onclick="choosePet('dragon')"> Dragon</button>
     </div>
   </div>
 
   <div id="pet-container" class="screen hidden">
-    <h1>🐾 My Virtual Pet 🐾</h1>
+    <h1 id="pet-name">MY PET</h1>
+    <p id="status"></p>
     <img id="pet" src="" alt="pet">
     <div id="stats">
-      <p>🕓 Time: <span id="timeDisplay"></span></p>
-      <p>🍎 Hunger: <span id="hunger">0</span></p>
-      <p>😊 Happiness: <span id="happiness">100</span></p>
-      <p id="status"></p>
+      <p>TIME: <span id="timeDisplay"></span></p>
+      <p>HUNGER: <span id="hunger">0</span></p>
+      
+      <p>HAPPINESS: <span id="happiness">100</span></p>
+      
+      
+  
     </div>
     <div id="buttons">
-      <button onclick="feed()">🍎 Feed</button>
-      <button onclick="play()">🎮 Play</button>
+      <button onclick="feed()">FEED</button>
+      <button onclick="play()">PLAY</button>
     </div>
   </div>
 
+  <div id="animation-box" class="hidden">
+    <img id="anim-frame" src="" alt="animation frame">
+  </div>
+
   <div id="game-screen" class="screen hidden">
-  <h2>🎮 Jump Game!</h2>
-  <canvas id="gameCanvas" width="300" height="150"></canvas>
-  <p>Press SPACE or TAP to jump</p>
-  <button onclick="stopMiniGame()">🛑 Stop</button>
-</div>
+    <h2>JUMP!</h2>
+    <canvas id="gameCanvas" width="200" height="150"></canvas>
+    <p>Press SPACE or TAP to jump</p>
+    <button onclick="stopMiniGame()">STOP</button>
+  </div>
 
   <script src="script.js"></script>
 </body>
