@@ -11,6 +11,12 @@ let isAsleep = false;
 let animFrame = 0;
 let lastUpdate = Date.now();
 let gameStarted = false;
+let birthTime = Number(localStorage.getItem("birthTime")) || null;
+let age = Number(localStorage.getItem("age")) || 0;
+
+let poops = [];
+let poopTimer = 0;
+const poopInterval = 60000;
 
 // DOM elements
 const chooseScreen = document.getElementById('choose-screen');
@@ -19,6 +25,7 @@ const petImg = document.getElementById('pet');
 const hungerDisplay = document.getElementById('hunger');
 const happinessDisplay = document.getElementById('happiness');
 const statusDisplay = document.getElementById('status');
+const agesDisplay = document.getElementById('age');
 const timeDisplay = document.getElementById('timeDisplay');
 
 // Start logic based on whether pet is already chosen
@@ -57,8 +64,20 @@ function startGame() {
     hunger = data.hunger || 0;
     happiness = data.happiness || 100;
     lastUpdate = data.lastUpdate || Date.now();
+    // load persistent birthTime and age if present
+    if (data.birthTime) birthTime = data.birthTime;
+    else birthTime = birthTime || Number(localStorage.getItem('birthTime')) || null;
+    age = data.age || age || 0;
+  } else {
+    // still attempt to read any standalone storage keys
+    birthTime = birthTime || Number(localStorage.getItem('birthTime')) || null;
+    age = age || Number(localStorage.getItem('age')) || 0;
   }
-
+  // If birthTime still missing, set it now (first run / first choose)
+  if (!birthTime) {
+    birthTime = Date.now();
+    localStorage.setItem("birthTime", birthTime);
+  }
   // Apply decay based on time elapsed since last visit
   const elapsedMinutes = (Date.now() - lastUpdate) / 60000;
   hunger = Math.min(100, hunger + Math.floor(elapsedMinutes / 3)); // +1 hunger every 3 mins
@@ -70,11 +89,32 @@ function startGame() {
 
   // Run update loop
   setInterval(() => {
-    console.log("internal loop")
+    //console.log("internal loop")
     updateTime();
     if (!isAsleep) {
       hunger = Math.min(100, hunger + 0.05);
       happiness = Math.max(0, happiness - 0.03);
+    }
+
+  // Poop generation
+    poopTimer += 1000;
+    console.log("trying to poop");
+    if (poopTimer >= poopInterval) {
+      if(Math.random() < 0.34) { // 1/3 chance to poop
+      console.log("pooping");
+      poopTimer = 0;
+      spawnPoop();
+      }
+    }
+    // Update age (in days) based on birthTime
+    if (birthTime) {
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const totalDays = Math.floor((Date.now() - birthTime) / msPerDay);
+      if (totalDays > age) {
+        age = totalDays;
+        // persist age key as well (kept both in petData and standalone for compatibility)
+        localStorage.setItem('age', String(age));
+      }
     }
     save();
     updateDisplay();
@@ -102,15 +142,19 @@ function updateDisplay() {
   let mood = "happy";
   if (isAsleep) mood = "sleepy";
   else if (happiness < 40 || hunger > 70) mood = "sad";
+  else if (happiness < 60 || hunger > 50) mood = "neutral";
 
   statusDisplay.textContent = isAsleep
     ? "Sleeping..."
     : hunger > 70
     ? "Hungry!"
-    : happiness < 40
+    : hunger > 50 || happiness < 5
+    ? "Needs attention"
+    : happiness < 60
     ? "Needs attention"
     : "Happy!";
 
+  agesDisplay.textContent = `Age: ${age} day${age !== 1 ? 's' : ''}`;
   animFrame = (animFrame + 1) % 2;
   petImg.src = `pets/${petType}/${mood}${animFrame + 1}.png`;
 
@@ -154,6 +198,8 @@ function save() {
       hunger,
       happiness,
       lastUpdate: Date.now(),
+      birthTime,
+      age,
     })
   );
 }
@@ -320,3 +366,47 @@ function playPetAnimation(petType, animatName, frameCount, frameDelay, callback)
   nextFrame();
 }
 
+function spawnPoop() {
+  const poopContainer = document.getElementById("poop-container");
+  const poop = document.createElement("img");
+  poop.src = "assets/poop.png"; // adjust path
+  poop.classList.add("poop");
+  
+  // random position inside container
+  //poop.style.left = Math.floor(Math.random() * 80 + 20) + "px";
+  //poop.style.top = Math.floor(Math.random() * 40 + 10) + "px";
+
+
+  const rect = poopContainer.getBoundingClientRect();
+  const centerX = rect.width / 2;
+  const centerY = rect.height / 2;
+
+  const offsetX = (Math.random() - 0.5) * 60;
+  const offsetY = (Math.random() - 0.5) * 100;
+
+  // Apply position
+  poop.style.left = `${centerX + offsetX - 10}px`; // -10 to center the image
+  poop.style.top = `${centerY + offsetY - 10}px`;
+
+  poop.onclick = () => cleanPoop(poop);
+
+  poopContainer.appendChild(poop);
+  poops.push(poop);
+
+  // affect stats
+  //happiness = Math.max(0, happiness - 5);
+  updateDisplay();
+  save();
+}
+
+function cleanPoop(poop) {
+  poop.remove();
+  poops = poops.filter(p => p !== poop);
+  happiness = Math.min(100, happiness + 10);
+/* //TODO clean animation
+  playPetAnimation(petType, "clean_anim", 4, 200, () => {
+    save();
+    updateDisplay();
+  });
+  */
+}
