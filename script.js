@@ -114,6 +114,7 @@ function startGame() {
 
   updateDisplay();
   updateTime();
+  updateBars();
 
   // Run update loop
   setInterval(() => {
@@ -146,6 +147,7 @@ function startGame() {
     }
     save();
     updateDisplay();
+    updateBars();
   }, 1000);
 }
 
@@ -437,4 +439,24 @@ function cleanPoop(poop) {
     updateDisplay();
   });
   */
+}
+
+
+function updateBars() {
+  const hungerValue = Math.max(0, Math.min(100, hunger));
+  const happinessValue = Math.max(0, Math.min(100, happiness));
+
+  // Hunger bar
+  hungerBar.innerHTML = ""; 
+  const hungerFill = document.createElement("div");
+  hungerFill.className = "stat-bar-fill";
+  hungerFill.style.width = 100 - hungerValue + "%";
+  hungerBar.appendChild(hungerFill);
+
+  // Happiness bar
+  happinessBar.innerHTML = "";
+  const happinessFill = document.createElement("div");
+  happinessFill.className = "stat-bar-fill";
+  happinessFill.style.width = happinessValue + "%";
+  happinessBar.appendChild(happinessFill);
 }

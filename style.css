@@ -145,3 +145,21 @@ button:hover {
   background: var(--fg-dark); /* color */
   margin: 6px auto;        /* vertical spacing and center horizontally */
 }
+
+.stat-bar {
+  width: 100px;          /* total bar length */
+  height: 8px;           /* pixel height */
+  border: 2px solid #223344;
+  background: #cfe8ff;   /* light gray “empty” fill */
+  image-rendering: pixelated;
+  margin-top: 4px;
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  background: #223344;   /* green retro fill */
+  image-rendering: pixelated;
+}
