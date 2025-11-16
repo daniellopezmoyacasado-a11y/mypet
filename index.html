@@ -9,11 +9,10 @@
 </head>
 <body>
   <div id="choose-screen" class="screen">
-    <h1>Choose Your Pet</h1>
+    <h1>Name Your Pet</h1>
     <div id="choices">
-      <button onclick="choosePet('cat')"> Cat</button>
-      <button onclick="choosePet('dog')"> Dog</button>
-      <button onclick="choosePet('dragon')"> Dragon</button>
+       <input type="text" id="petInput">
+      <button onclick="choosePet(document.getElementById('petInput').value)">START</button>
     </div>
   </div>
 

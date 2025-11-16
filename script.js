@@ -9,10 +9,12 @@ let hunger = 0;
 let happiness = 100;
 let isAsleep = false;
 let animFrame = 0;
+let petName = localStorage.getItem('petName');
 let lastUpdate = Date.now();
 let gameStarted = false;
 let birthTime = Number(localStorage.getItem("birthTime")) || null;
 let age = Number(localStorage.getItem("age")) || 0;
+let firstLoad = true;
 
 let poops = [];
 let poopTimer = 0;
@@ -30,21 +32,40 @@ const timeDisplay = document.getElementById('timeDisplay');
 
 // Start logic based on whether pet is already chosen
 window.addEventListener('DOMContentLoaded', () => {
-if (!petType) {
-  chooseScreen.classList.remove('hidden');
-  petContainer.classList.add('hidden');
-} else {
-  startGame();
-}
+   
+  if (localStorage.length > 0) {
+    firstLoad =  false;
+    console.log("Not first load");
+  } else {
+    firstLoad =  true;
+    console.log("First load");
+  }
+
+  if (firstLoad) {
+      chooseScreen.classList.remove('hidden');
+      petContainer.classList.add('hidden');
+  } else {
+      chooseScreen.classList.add('hidden');
+      petContainer.classList.remove('hidden');
+    localStorage.setItem('loaded', 'true');
+    firstLoad = false;
+    startGame();
+  }
+ 
+
 });
 
 
 // ----------------------------
 //  PET SELECTION
 // ----------------------------
-function choosePet(type) {
-  petType = type;
-  localStorage.setItem('petType', type);
+function choosePet(name) {
+  console.log("Pet chosen:", name);
+  types = ["cat", "dog", "dragon", "alien", "dove"];
+  petName = name || "My Pet";
+  petType = types[Math.floor(Math.random() * types.length)];
+  localStorage.setItem('petType', petType);
+  localStorage.setItem('petName', name);
   chooseScreen.classList.add('hidden');
   petContainer.classList.remove('hidden');
   if (!gameStarted) startGame();
@@ -55,9 +76,16 @@ function choosePet(type) {
 // ----------------------------
 function startGame() {
   if (gameStarted) return;
+ 
+      
   gameStarted = true;
   // localStorage.clear(); // uncomment to reset all data
   console.log("Game Start")
+
+  if (petName) {
+    document.getElementById('pet-name').textContent = petName;
+  }
+
   // Load saved data
   if (localStorage.getItem('petData')) {
     const data = JSON.parse(localStorage.getItem('petData'));
@@ -253,7 +281,7 @@ function gameLoop() {
     obstacle.x = 300 + Math.random() * 100;
     score++;
      if (score % 3 === 0) {
-      speed += 0.5; // obstacle moves faster
+      speed += 0.9 * Math.random(); // obstacle moves faster
       if (speed > 10) speed = 10; // max cap
     }
   }
