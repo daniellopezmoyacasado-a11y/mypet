@@ -20,6 +20,26 @@ let poops = [];
 let poopTimer = 0;
 const poopInterval = 60000;
 
+
+let runnerActive = false;
+let runnerInterval;
+let runnerSpeed = 4;
+let runnerGravity = 0.5;
+
+const runner = {
+  x: 50,
+  y: 0,
+  width: 32,
+  height: 32,
+  vy: 0,
+  jumping: false,
+  sliding: false
+};
+
+let obstacles = [];
+let runnerScore = 0;
+
+
 // DOM elements
 const chooseScreen = document.getElementById('choose-screen');
 const petContainer = document.getElementById('pet-container');
@@ -61,7 +81,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // ----------------------------
 function choosePet(name) {
   console.log("Pet chosen:", name);
-  types = ["cat", "dog", "dragon", "alien", "dove"];
+  types = ["cat", "dog", "dragon", "alien", "dove","deer"];
   petName = name || "My Pet";
   petType = types[Math.floor(Math.random() * types.length)];
   localStorage.setItem('petType', petType);
@@ -198,14 +218,34 @@ function updateDisplay() {
 // ----------------------------
 function feed() {
   if (isAsleep) return;
-  if (hunger <= 0) return; 
+  const data = JSON.parse(localStorage.getItem('petData'));
+  hunger = data.hunger || 0;
+  if (hunger <= 1) return; 
   else {// no overfeeding, TODO play no_eat_anim
-    playPetAnimation(petType, "eat_anim", 5, 400, () => {
-      hunger = Math.max(0, hunger - 15);
-      happiness = Math.min(100, happiness + 5);
-      save();
-      updateDisplay();
-    });
+      if (Math.random() < 0.3) { 
+        playPetAnimation(petType, "eat_anim", 5, 400, () => {
+          hunger = Math.max(0, hunger - 15);
+          happiness = Math.min(100, happiness + 5);
+          save();
+          updateDisplay();
+        });
+      } else if (Math.random() >= 0.3 < 0.6) {
+          playPetAnimation(petType, "second_eat_anim", 5, 400, () => {
+          hunger = Math.max(0, hunger - 15);
+          happiness = Math.min(100, happiness + 5);
+          save();
+          updateDisplay();
+        });
+      } else {
+        playPetAnimation(petType, "third_eat_anim", 5, 400, () => {
+          hunger = Math.max(0, hunger - 15);
+          happiness = Math.min(100, happiness + 5);
+          save();
+          updateDisplay();
+         
+        });
+      }
+       updateBars();
   }
 }
 
@@ -213,9 +253,11 @@ function play() {
   if (isAsleep) return;
   happiness = Math.min(100, happiness + 1);
   hunger = Math.min(100, hunger + 5);
-  startMiniGame();
+  if (Math.random() < 0.5)  startMiniGame();
+  else startMiniGame();//startRunnerGame();
   save();
   updateDisplay();
+  updateBars();
 }
 
 // ----------------------------
@@ -334,8 +376,11 @@ function handleJump(e) {
 
 // Stop game manually
 function stopMiniGame() {
-  if (!gameActive) return;
-  endMiniGame(true, true); // force stop
+  if (!gameActive) {
+    if (!runnerActive) return;
+    stopRunnerGame
+  } else  endMiniGame(true, true); 
+  // force stop
 }
 
 // End game
@@ -443,9 +488,10 @@ function cleanPoop(poop) {
 
 
 function updateBars() {
-  const hungerValue = Math.max(0, Math.min(100, hunger));
-  const happinessValue = Math.max(0, Math.min(100, happiness));
-
+   hungerValue =Math.round( Math.max(0, Math.min(100, hunger)));
+   happinessValue = Math.round( Math.max(0, Math.min(100, happiness)));
+  if (hungerValue < 2) hungerValue = 0;
+  if (happinessValue > 98) happinessValue = 100;
   // Hunger bar
   hungerBar.innerHTML = ""; 
   const hungerFill = document.createElement("div");
@@ -459,4 +505,129 @@ function updateBars() {
   happinessFill.className = "stat-bar-fill";
   happinessFill.style.width = happinessValue + "%";
   happinessBar.appendChild(happinessFill);
+}
+
+function startRunnerGame() {
+  console.log("Starting runner game");
+  runnerActive = true;
+  gameCanvas.classList.remove("hidden");
+
+  resetRunner();
+
+  runnerInterval = setInterval(runnerLoop, 1000 / 60); // 60 FPS
+}
+
+function resetRunner() {
+  runner.y = gameCanvas.height - 40;
+  runner.vy = 0;
+  runner.jumping = false;
+  runner.sliding = false;
+  runnerSpeed = 4;
+  runnerScore = 0;
+  obstacles = [];
+}
+
+function stopRunnerGame() {
+  runnerActive = false;
+  clearInterval(runnerInterval);
+  gameCanvas.classList.add("hidden");
+}
+
+document.addEventListener("keydown", (e) => {
+  if (!runnerActive) return;
+
+  if (e.code === "Space" && !runner.jumping && !runner.sliding) {
+    runner.jumping = true;
+    runner.vy = -10;
+  }
+
+  if (e.code === "ArrowDown" && !runner.jumping) {
+    runner.sliding = true;
+    runner.height = 20; // smaller hitbox
+  }
+});
+
+document.addEventListener("keyup", (e) => {
+  if (!runnerActive) return;
+
+  if (e.code === "ArrowDown") {
+    runner.sliding = false;
+    runner.height = 32; // restore size
+  }
+});
+
+function runnerLoop() {
+  const ctx = gameCanvas.getContext("2d");
+
+  // Clear
+  ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+  // Apply gravity
+  runner.vy += runnerGravity;
+  runner.y += runner.vy;
+
+  // Ground collision
+  if (runner.y >= gameCanvas.height - 40) {
+    runner.y = gameCanvas.height - 40;
+    runner.vy = 0;
+    runner.jumping = false;
+  }
+
+  // Draw player fallback rectangle
+  ctx.fillStyle = "#303030";
+  ctx.fillRect(runner.x - 2, runner.y - 2, runner.width + 4, runner.height + 4);
+
+  // Draw pet sprite
+  if (petSprite) {
+    ctx.drawImage(
+      petSprite,
+      runner.x,
+      runner.y,
+      runner.width,
+      runner.height
+    );
+  }
+
+  // Spawn obstacles
+  if (Math.random() < 0.02) {
+    obstacles.push({
+      x: gameCanvas.width + 20,
+      width: 20,
+      height: Math.random() < 0.5 ? 30 : 55, // tall or short obstacle
+      y: gameCanvas.height - 40
+    });
+  }
+
+  // Move & draw obstacles
+  ctx.fillStyle = "#000";
+  for (let obs of obstacles) {
+    obs.x -= runnerSpeed;
+    ctx.fillRect(obs.x, obs.y - obs.height, obs.width, obs.height);
+  }
+
+  // Remove off-screen obstacles
+  obstacles = obstacles.filter(o => o.x + o.width > 0);
+
+  // Collision check
+  for (let obs of obstacles) {
+    if (
+      runner.x < obs.x + obs.width &&
+      runner.x + runner.width > obs.x &&
+      runner.y < obs.y &&
+      runner.y + runner.height > obs.y - obs.height
+    ) {
+      stopRunnerGame();
+      alert("Game Over! Score: " + runnerScore);
+      return;
+    }
+  }
+
+  // Increase difficulty
+  runnerSpeed += 0.002;
+
+  // Score
+  runnerScore += 1;
+  ctx.fillStyle = "#000";
+  ctx.font = "10px 'Press Start 2P'";
+  ctx.fillText("SCORE: " + runnerScore, 10, 15);
 }
