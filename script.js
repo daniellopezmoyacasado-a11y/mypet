@@ -21,23 +21,7 @@ let poopTimer = 0;
 const poopInterval = 60000;
 
 
-let runnerActive = false;
-let runnerInterval;
-let runnerSpeed = 4;
-let runnerGravity = 0.5;
 
-const runner = {
-  x: 50,
-  y: 0,
-  width: 32,
-  height: 32,
-  vy: 0,
-  jumping: false,
-  sliding: false
-};
-
-let obstacles = [];
-let runnerScore = 0;
 
 
 // DOM elements
@@ -228,24 +212,26 @@ function feed() {
           happiness = Math.min(100, happiness + 5);
           save();
           updateDisplay();
+          updateBars();
         });
       } else if (Math.random() >= 0.3 < 0.6) {
           playPetAnimation(petType, "second_eat_anim", 5, 400, () => {
-          hunger = Math.max(0, hunger - 15);
+          hunger = Math.max(0, hunger - 20);
           happiness = Math.min(100, happiness + 5);
           save();
           updateDisplay();
+          updateBars();
         });
       } else {
         playPetAnimation(petType, "third_eat_anim", 5, 400, () => {
-          hunger = Math.max(0, hunger - 15);
+          hunger = Math.max(0, hunger - 25);
           happiness = Math.min(100, happiness + 5);
           save();
           updateDisplay();
-         
+          updateBars();
         });
       }
-       updateBars();
+  
   }
 }
 
@@ -254,7 +240,7 @@ function play() {
   happiness = Math.min(100, happiness + 1);
   hunger = Math.min(100, hunger + 5);
   if (Math.random() < 0.5)  startMiniGame();
-  else startMiniGame();//startRunnerGame();
+  else startSecondGame();//startRunnerGame();
   save();
   updateDisplay();
   updateBars();
@@ -378,7 +364,7 @@ function handleJump(e) {
 function stopMiniGame() {
   if (!gameActive) {
     if (!runnerActive) return;
-    stopRunnerGame
+    stopSecondGame();
   } else  endMiniGame(true, true); 
   // force stop
 }
@@ -391,7 +377,7 @@ function endMiniGame(won = true, manualStop = false) {
 
   let bonus = 0;
   if (!manualStop) {
-    bonus = Math.min(20, score * 2);
+    bonus = Math.min(5, score * 2);
   }
 
   happiness = Math.min(100, happiness + bonus);
@@ -507,127 +493,159 @@ function updateBars() {
   happinessBar.appendChild(happinessFill);
 }
 
-function startRunnerGame() {
-  console.log("Starting runner game");
-  runnerActive = true;
-  gameCanvas.classList.remove("hidden");
+// ----------------------------
+// SECOND GAME — Flappy-style pipes
+// ----------------------------
 
-  resetRunner();
+let secondGameActive = false;
+let bird, pipes, gravity2, flapPower, score2, pipeSpeed;
+let petSprite2 = new Image();
+let loopiter = 0;
 
-  runnerInterval = setInterval(runnerLoop, 1000 / 60); // 60 FPS
+// Start second game
+function startSecondGame() {
+  if (isAsleep) return;
+
+  petSprite2.src = petImg.src;
+
+  petContainer.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+  initSecondGame();
+
+  document.addEventListener('keydown', handleFlap);
+  canvas.addEventListener('touchstart', handleFlap);
 }
 
-function resetRunner() {
-  runner.y = gameCanvas.height - 40;
-  runner.vy = 0;
-  runner.jumping = false;
-  runner.sliding = false;
-  runnerSpeed = 4;
-  runnerScore = 0;
-  obstacles = [];
+// Initialize game state
+function initSecondGame() {
+  secondGameActive = true;
+  bird = { x: 60, y: canvas.height / 2 - 10, size: 15, vy: 0 };
+  gravity2 = 0.3;
+  flapPower = -5;
+  pipeSpeed = 2.5;
+  score2 = 0;
+
+  pipes = [];
+  spawnPipe();
+  loopiter = 0;
+
+  requestAnimationFrame(secondGameLoop);
 }
 
-function stopRunnerGame() {
-  runnerActive = false;
-  clearInterval(runnerInterval);
-  gameCanvas.classList.add("hidden");
+// Spawn a new pipe pair
+function spawnPipe() {
+  let gap = 60 + Math.random() * 40; // gap size
+  let topHeight = Math.random() * (canvas.height - gap - 40);
+
+  pipes.push({
+    x: canvas.width,
+    top: topHeight,
+    bottom: topHeight + gap,
+    width: 30
+  });
 }
 
-document.addEventListener("keydown", (e) => {
-  if (!runnerActive) return;
+// Game loop
+function secondGameLoop() {
+  if (!secondGameActive) return;
 
-  if (e.code === "Space" && !runner.jumping && !runner.sliding) {
-    runner.jumping = true;
-    runner.vy = -10;
-  }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (e.code === "ArrowDown" && !runner.jumping) {
-    runner.sliding = true;
-    runner.height = 20; // smaller hitbox
-  }
-});
+  // Bird physics
+  if(loopiter > 50 ) {
+    bird.vy += gravity2;
+    bird.y += bird.vy;
+  
 
-document.addEventListener("keyup", (e) => {
-  if (!runnerActive) return;
+    // Draw bird
+    ctx.drawImage(petSprite2, bird.x, bird.y, bird.size + 10, bird.size + 10);
 
-  if (e.code === "ArrowDown") {
-    runner.sliding = false;
-    runner.height = 32; // restore size
-  }
-});
+    // Move and draw pipes
+    for (let i = 0; i < pipes.length; i++) {
+      let p = pipes[i];
+      p.x -= pipeSpeed;
 
-function runnerLoop() {
-  const ctx = gameCanvas.getContext("2d");
+      // Draw top pipe
+      ctx.fillStyle = "green";
+      ctx.fillRect(p.x, 0, p.width, p.top);
 
-  // Clear
-  ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+      // Draw bottom pipe
+      ctx.fillRect(p.x, p.bottom, p.width, canvas.height - p.bottom);
 
-  // Apply gravity
-  runner.vy += runnerGravity;
-  runner.y += runner.vy;
+      // Collision detection
+      if (
+        bird.x < p.x + p.width &&
+        bird.x + bird.size > p.x &&
+        (bird.y < p.top || bird.y + bird.size > p.bottom)
+      ) {
+        endSecondGame(false);
+        return;
+      }
 
-  // Ground collision
-  if (runner.y >= gameCanvas.height - 40) {
-    runner.y = gameCanvas.height - 40;
-    runner.vy = 0;
-    runner.jumping = false;
-  }
+      // Score when passing pipe
+      if (p.x + p.width === bird.x) {
+        score2++;
+        if (score2 % 5 === 0) pipeSpeed += 0.5; // increase difficulty
+      }
+    }
 
-  // Draw player fallback rectangle
-  ctx.fillStyle = "#303030";
-  ctx.fillRect(runner.x - 2, runner.y - 2, runner.width + 4, runner.height + 4);
+    // Remove off-screen pipes
+    if (pipes.length && pipes[0].x < -pipes[0].width) {
+      pipes.shift();
+      spawnPipe();
+    }
 
-  // Draw pet sprite
-  if (petSprite) {
-    ctx.drawImage(
-      petSprite,
-      runner.x,
-      runner.y,
-      runner.width,
-      runner.height
-    );
-  }
-
-  // Spawn obstacles
-  if (Math.random() < 0.02) {
-    obstacles.push({
-      x: gameCanvas.width + 20,
-      width: 20,
-      height: Math.random() < 0.5 ? 30 : 55, // tall or short obstacle
-      y: gameCanvas.height - 40
-    });
-  }
-
-  // Move & draw obstacles
-  ctx.fillStyle = "#000";
-  for (let obs of obstacles) {
-    obs.x -= runnerSpeed;
-    ctx.fillRect(obs.x, obs.y - obs.height, obs.width, obs.height);
-  }
-
-  // Remove off-screen obstacles
-  obstacles = obstacles.filter(o => o.x + o.width > 0);
-
-  // Collision check
-  for (let obs of obstacles) {
-    if (
-      runner.x < obs.x + obs.width &&
-      runner.x + runner.width > obs.x &&
-      runner.y < obs.y &&
-      runner.y + runner.height > obs.y - obs.height
-    ) {
-      stopRunnerGame();
-      alert("Game Over! Score: " + runnerScore);
+    // Floor/ceiling collision
+    if (bird.y < 0 || bird.y + bird.size > canvas.height) {
+      endSecondGame(false);
       return;
     }
+
+    // Draw score
+    ctx.font = "12px monospace";
+    ctx.fillText(`Score: ${score2}`, 10, 20);
+  }else {
+      // Draw bird
+      ctx.drawImage(petSprite2, bird.x, bird.y, bird.size + 10, bird.size + 10);
+      ctx.font = "12px monospace";
+    ctx.fillText(`Score: ${score2}`, 10, 20);
+    
+  }
+    loopiter++;
+
+  requestAnimationFrame(secondGameLoop);
+}
+
+// Flap
+function handleFlap(e) {
+  if (!secondGameActive) return;
+  bird.vy = flapPower;
+}
+
+// Stop game manually
+function stopSecondGame() {
+  if (!secondGameActive) return;
+  endSecondGame(true, true);
+}
+
+// End game
+function endSecondGame(won = true, manualStop = false) {
+  secondGameActive = false;
+  document.removeEventListener('keydown', handleFlap);
+  canvas.removeEventListener('touchstart', handleFlap);
+
+  let bonus = 0;
+  if (!manualStop) {
+    bonus = Math.min(5, score2 * 2);
   }
 
-  // Increase difficulty
-  runnerSpeed += 0.002;
+  happiness = Math.min(100, happiness + bonus);
+  hunger = Math.min(100, hunger + bonus);
+  save();
 
-  // Score
-  runnerScore += 1;
-  ctx.fillStyle = "#000";
-  ctx.font = "10px 'Press Start 2P'";
-  ctx.fillText("SCORE: " + runnerScore, 10, 15);
+  setTimeout(() => {
+    gameScreen.classList.add('hidden');
+    petContainer.classList.remove('hidden');
+    updateDisplay();
+  }, 500);
 }
